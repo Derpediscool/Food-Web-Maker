@@ -20,9 +20,13 @@ export default function FoodWebApp() {
   const [color, setColor] = useState('#f0f0f0');
   const [creatures, setCreatures] = useState<Creature[]>([]);
   const [editing, setEditing] = useState<number | null>(null);
+  const [duplicateError, setDuplicateError] = useState(false);
 
   const addCreature = () => {
-    if (!creatureName.trim()) return;
+    if (!creatureName.trim() || creatures.some(creature => creature.name === creatureName.trim())) {
+      setDuplicateError(true);
+      return;
+    }
 
     setCreatures([...creatures, { 
       name: creatureName.trim(), 
@@ -32,6 +36,7 @@ export default function FoodWebApp() {
     setCreatureName('');
     setEats('');
     setColor('#f0f0f0');
+    setDuplicateError(false);
   };
 
   const startEditing = (index: number) => {
@@ -40,6 +45,7 @@ export default function FoodWebApp() {
     setEats(creature.eats);
     setColor(creature.color);
     setEditing(index);
+    setDuplicateError(false); // Reset duplicate error when starting edit
   };
 
   const editCreature = () => {
@@ -55,6 +61,7 @@ export default function FoodWebApp() {
     setEats('');
     setColor('#f0f0f0');
     setEditing(null);
+    setDuplicateError(false); // Reset duplicate error after edit
   };
 
   return (
@@ -105,9 +112,13 @@ export default function FoodWebApp() {
                 setCreatureName('');
                 setEats('');
                 setColor('#f0f0f0');
+                setDuplicateError(false); // Reset duplicate error when canceling edit
               }} variant="secondary">
                 Cancel Edit
               </Button>
+            )}
+            {duplicateError && (
+              <p className="text-red-500 mt-2">Error: Duplicate creature name.</p>
             )}
           </div>
         </CardContent>
