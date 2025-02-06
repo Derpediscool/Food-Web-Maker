@@ -21,28 +21,34 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({ creatures }) =>
   useEffect(() => {
     if (containerRef.current) {
       // Create nodes and edges sets.
-      const nodes = new DataSet<{ id: string; label: string; shape: string; color: string }>([]);
+      const nodes = new DataSet<{ id: string; label: string; shape: string; color: string; font: { color: string } }>([]);
       const edges = new DataSet<{ from: string; to: string; arrows: string; id?: string }>([]);
 
       // For each creature, add a node and add an edge if "eats" is specified.
       creatures.forEach((creature) => {
         // Add the creature node if it doesn't exist.
         if (!nodes.get(creature.name)) {
+          // Autodetect text color based on the background color
+          const textColor = creature.color === '#f0f0f0' ? '#000000' : '#ffffff';
           nodes.add({ 
             id: creature.name, 
             label: creature.name, 
             shape: 'box', 
-            color: creature.color 
+            color: creature.color,
+            font: { color: textColor }
           });
         }
         // If there is a food item specified, add the food node and an edge.
         if (creature.eats) {
           if (!nodes.get(creature.eats)) {
+            // Autodetect text color based on the background color
+            const textColor = creature.color === '#f0f0f0' ? '#000000' : '#ffffff';
             nodes.add({ 
               id: creature.eats, 
               label: creature.eats, 
               shape: 'box', 
-              color: '#f0f0f0' 
+              color: '#f0f0f0',
+              font: { color: textColor }
             });
           }
           // Ensure the edge is added correctly
