@@ -22,6 +22,7 @@ export default function FoodWebApp() {
   const [creatures, setCreatures] = useState<Creature[]>([]);
   const [editing, setEditing] = useState<number | null>(null);
   const [duplicateError, setDuplicateError] = useState(false);
+  const [importError, setImportError] = useState(false);
 
   const addCreature = () => {
     if (!creatureName.trim() || creatures.some(creature => creature.name === creatureName.trim())) {
@@ -67,6 +68,41 @@ export default function FoodWebApp() {
     setColor('#f0f0f0');
     setEditing(null);
     setDuplicateError(false); // Reset duplicate error after edit
+  };
+
+  const downloadCreatures = () => {
+    const creaturesData = JSON.stringify(creatures, null, 2);
+    const blob = new Blob([creaturesData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'food-web.json';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const importCreatures = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const content = e.target?.result as string;
+        const data = JSON.parse(content);
+        if (Array.isArray(data)) {
+          setCreatures(data);
+          setImportError(false);
+        } else {
+          setImportError(true);
+        }
+      } catch (error) {
+        setImportError(true);
+      }
+    };
+    reader.readAsText(file);
   };
 
   return (
@@ -130,6 +166,28 @@ export default function FoodWebApp() {
             )}
             {duplicateError && (
               <p className="text-red-500 mt-2">Error: Duplicate creature name.</p>
+            )}
+            <div className="flex items-center gap-4 mt-4">
+              <Button onClick={downloadCreatures} variant="outline">
+                Download Food Web
+              </Button>
+              <div className="flex items-center gap-2">
+                <Label htmlFor="import" className="cursor-pointer">
+                  <Button variant="outline" onClick={() => document.getElementById('import')?.click()}>
+                    Import Food Web
+                  </Button>
+                </Label>
+                <Input
+                  id="import"
+                  type="file"
+                  accept=".json"
+                  onChange={importCreatures}
+                  className="hidden"
+                />
+              </div>
+            </div>
+            {importError && (
+              <p className="text-red-500 mt-2">Error: Invalid food web file format.</p>
             )}
           </div>
         </CardContent>
