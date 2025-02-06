@@ -22,7 +22,7 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({ creatures }) =>
     if (containerRef.current) {
       // Create nodes and edges sets.
       const nodes = new DataSet<{ id: string; label: string; shape: string; color: string }>([]);
-      const edges = new DataSet<{ from: string; to: string; arrows: string }>([]);
+      const edges = new DataSet<{ from: string; to: string; arrows: string; id?: string }>([]);
 
       // For each creature, add a node and add an edge if "eats" is specified.
       creatures.forEach((creature) => {
@@ -45,8 +45,8 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({ creatures }) =>
               color: '#f0f0f0' 
             });
           }
-          // Reverse the arrows by swapping 'from' and 'to' in the edge.
-          edges.add({ from: creature.eats, to: creature.name, arrows: 'to' });
+          // Ensure the edge is added correctly
+          edges.add({ from: creature.eats, to: creature.name, arrows: 'to', id: `${creature.eats}-${creature.name}` } as any);
         }
       });
 
