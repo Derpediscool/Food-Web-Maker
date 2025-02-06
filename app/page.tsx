@@ -239,6 +239,11 @@ export default function FoodWebApp() {
         </CardHeader>
         <CardContent>
           <GraphVisualization creatures={creatures} />
+          <div className="mt-4">
+            <Button variant="outline" onClick={() => window.dispatchEvent(new CustomEvent('stabilizeGraph'))}>
+              Reorganize Graph
+            </Button>
+          </div>
         </CardContent>
       </Card>
 

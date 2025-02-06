@@ -14,6 +14,15 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({ creatures }) =>
   const networkRef = useRef<Network | null>(null);
 
   useEffect(() => {
+    // Add event listener for graph stabilization
+    const handleStabilize = () => {
+      if (networkRef.current) {
+        networkRef.current.stabilize();
+      }
+    };
+
+    window.addEventListener('stabilizeGraph', handleStabilize);
+
     if (containerRef.current) {
       // Create nodes and edges sets.
       const nodes = new DataSet<{ id: string; label: string; shape: string; color: string; font: { color: string } }>([]);
@@ -61,15 +70,39 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({ creatures }) =>
 
       const options = {
         layout: {
-          // You can change this to hierarchical: true for a different layout
-          hierarchical: false,
+          hierarchical: {
+            enabled: true,
+            direction: 'UD', // Up to Down layout
+            sortMethod: 'directed', // Sort nodes based on directed edges
+            nodeSpacing: 150, // Increase spacing between nodes
+            levelSeparation: 150, // Increase vertical spacing between levels
+          }
         },
         physics: {
-          // Adjust the physics options as needed
-          stabilization: false,
+          enabled: true,
+          hierarchicalRepulsion: {
+            nodeDistance: 200, // Increase distance between nodes
+            centralGravity: 0.5,
+            springLength: 200,
+            springConstant: 0.05,
+            damping: 0.09
+          },
+          stabilization: {
+            enabled: true,
+            iterations: 2000, // Increase iterations for better stability
+            updateInterval: 50,
+          },
+        },
+        edges: {
+          smooth: {
+            type: 'cubicBezier', // Smoother edge curves
+            forceDirection: 'vertical', // Force edges to flow vertically
+            roundness: 0.5
+          }
         },
         nodes: {
           shape: 'box',
+          margin: 10, // Add margin around node text
           color: {
             border: '#2B7CE9',
             background: '#D2E5FF',
@@ -84,6 +117,11 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({ creatures }) =>
         networkRef.current = new Network(containerRef.current, data, options);
       }
     }
+
+    // Cleanup event listener
+    return () => {
+      window.removeEventListener('stabilizeGraph', handleStabilize);
+    };
   }, [creatures]);
 
   return <div ref={containerRef} style={{ height: '500px', border: '1px solid #ddd' }} />;
