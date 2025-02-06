@@ -3,12 +3,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { DataSet, Network } from 'vis-network/standalone/esm/vis-network';
-
-interface Creature {
-  name: string;
-  eats: string;
-  color: string;
-}
+import { Creature } from '@/types/Creature';
 
 interface GraphVisualizationProps {
   creatures: Creature[];
@@ -24,7 +19,7 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({ creatures }) =>
       const nodes = new DataSet<{ id: string; label: string; shape: string; color: string; font: { color: string } }>([]);
       const edges = new DataSet<{ from: string; to: string; arrows: string; id?: string }>([]);
 
-      // For each creature, add a node and add an edge if "eats" is specified.
+      // For each creature, add a node and add edges for each food item.
       creatures.forEach((creature) => {
         // Add the creature node if it doesn't exist.
         if (!nodes.get(creature.name)) {
@@ -38,22 +33,25 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({ creatures }) =>
             font: { color: textColor }
           });
         }
-        // If there is a food item specified, add the food node and an edge.
-        if (creature.eats) {
-          if (!nodes.get(creature.eats)) {
-            // Autodetect text color based on the background color
-            const textColor = creature.color === '#f0f0f0' ? '#000000' : '#ffffff';
+        // Add edges for each food item
+        creature.eats.forEach((food) => {
+          // Add food node if it doesn't exist
+          if (!nodes.get(food)) {
             nodes.add({ 
-              id: creature.eats, 
-              label: creature.eats, 
+              id: food, 
+              label: food, 
               shape: 'box', 
               color: '#f0f0f0',
-              font: { color: textColor }
+              font: { color: '#000000' }
             });
           }
-          // Ensure the edge is added correctly
-          edges.add({ from: creature.eats, to: creature.name, arrows: 'to' } as { from: string; to: string; arrows: string });
-        }
+          // Add edge from food to creature
+          edges.add({ 
+            from: food, 
+            to: creature.name, 
+            arrows: 'to' 
+          });
+        });
       });
 
       const data = {

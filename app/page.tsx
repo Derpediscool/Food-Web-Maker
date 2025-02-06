@@ -7,12 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import GraphVisualization from '@/components/GraphVisualization';
-
-interface Creature {
-  name: string;
-  eats: string;
-  color: string;
-}
+import { Creature } from '@/types/Creature';
 
 export default function FoodWebApp() {
   const [creatureName, setCreatureName] = useState('');
@@ -28,9 +23,11 @@ export default function FoodWebApp() {
       return;
     }
 
+    const eatsArray = eats.trim() ? eats.split(',').map(eat => eat.trim()) : [];
+
     setCreatures([...creatures, { 
       name: creatureName.trim(), 
-      eats: eats.trim(), 
+      eats: eatsArray,
       color: color 
     }]);
     setCreatureName('');
@@ -42,7 +39,7 @@ export default function FoodWebApp() {
   const startEditing = (index: number) => {
     const creature = creatures[index];
     setCreatureName(creature.name);
-    setEats(creature.eats);
+    setEats(creature.eats.join(', '));
     setColor(creature.color);
     setEditing(index);
     setDuplicateError(false); // Reset duplicate error when starting edit
@@ -51,9 +48,11 @@ export default function FoodWebApp() {
   const editCreature = () => {
     if (!creatureName.trim() || editing === null) return;
 
+    const eatsArray = eats.trim() ? eats.split(',').map(eat => eat.trim()) : [];
+
     setCreatures(creatures.map((creature, i) => i === editing ? {
       name: creatureName.trim(),
-      eats: eats.trim(),
+      eats: eatsArray,
       color: color
     } : creature));
     
@@ -84,7 +83,7 @@ export default function FoodWebApp() {
               />
             </div>
             <div>
-              <Label htmlFor="eats">What it eats</Label>
+              <Label htmlFor="eats">What it eats (separate by comma)</Label>
               <Input
                 id="eats"
                 type="text"
@@ -137,8 +136,10 @@ export default function FoodWebApp() {
               {creatures.map((creature, index) => (
                 <li key={index} className="flex justify-between items-center">
                   <span>
-                    <strong>{creature.name}</strong> eats{' '}
-                    <em>{creature.eats ? creature.eats : 'nothing'}</em>
+                    <strong>{creature.name}</strong>
+                    {creature.eats.length > 0 && (
+                      <> eats <em>{creature.eats.join(', ')}</em></>
+                    )}
                   </span>
                   <div className="space-x-2">
                     <Button 
