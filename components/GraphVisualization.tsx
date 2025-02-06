@@ -46,7 +46,7 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({ creatures }) =>
             });
           }
           // Ensure the edge is added correctly
-          edges.add({ from: creature.eats, to: creature.name, arrows: 'to', id: `${creature.eats}-${creature.name}` } as any);
+          edges.add({ from: creature.eats, to: creature.name, arrows: 'to' } as { from: string; to: string; arrows: string });
         }
       });
 
