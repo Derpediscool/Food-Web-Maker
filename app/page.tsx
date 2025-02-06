@@ -8,6 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import GraphVisualization from '@/components/GraphVisualization';
 import { Creature } from '@/types/Creature';
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert"
+ 
 
 export default function FoodWebApp() {
   const [creatureName, setCreatureName] = useState('');
@@ -65,6 +71,12 @@ export default function FoodWebApp() {
 
   return (
     <div className="container mx-auto p-4 space-y-6">
+      <Alert variant="destructive">
+        <AlertTitle>Warning!</AlertTitle>
+        <AlertDescription>
+          There is a bug where if a node has too many things connected to it the color will disappear.
+        </AlertDescription>
+      </Alert>
       {/* Input Form */}
       <Card>
         <CardHeader>
