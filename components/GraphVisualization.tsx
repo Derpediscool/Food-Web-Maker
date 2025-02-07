@@ -64,7 +64,7 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({ creatures, opti
           id: `${creature.name}->${prey}`,
           from: creature.name,
           to: prey,
-          arrows: 'to',
+          arrows: 'from',
           color: '#666666',
           width: 2,
         }))
@@ -82,6 +82,7 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({ creatures, opti
         centralGravity: 0.01, // Central gravity from page.tsx
         springLength: 100, // Spring length from page.tsx
         springConstant: 0.08, // Spring constant from page.tsx
+
         avoidOverlap: 1
       },
       barnesHut: {
