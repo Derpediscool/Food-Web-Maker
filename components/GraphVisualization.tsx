@@ -59,9 +59,9 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({ creatures, opti
     );
 
     const edges = new DataSet(
-      creatures.flatMap((creature, creatureIndex) =>
-        creature.eats.map((prey, preyIndex) => ({
-          id: `${creatureIndex}-${preyIndex}`,
+      creatures.flatMap((creature) =>
+        creature.eats.map((prey) => ({
+          id: `${creature.name}->${prey}`,
           from: creature.name,
           to: prey,
           arrows: 'to',
@@ -72,6 +72,26 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({ creatures, opti
     );
 
     const data = { nodes, edges };
+
+    // Set default physics parameters for circular layout
+    const defaultPhysics = {
+      enabled: true,
+      solver: 'forceAtlas2Based',
+      forceAtlas2Based: {
+        gravitationalConstant: -50, // Max gravitational constant from page.tsx
+        centralGravity: 0.01, // Central gravity from page.tsx
+        springLength: 100, // Spring length from page.tsx
+        springConstant: 0.08, // Spring constant from page.tsx
+        avoidOverlap: 1
+      },
+      barnesHut: {
+        gravitationalConstant: -2000,
+        centralGravity: 0.3,
+        springLength: 95,
+        springConstant: 0.04,
+        damping: 0.09
+      }
+    };
 
     const networkOptions = {
       layout: {
@@ -85,27 +105,9 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({ creatures, opti
           levelSeparation: 150
         }
       },
-      physics: {
+      physics: options.mode === 'circular' ? defaultPhysics : {
         enabled: true,
-        solver: options.mode === 'circular' ? 'forceAtlas2Based' : 'barnesHut',
-        forceAtlas2Based: {
-          gravitationalConstant: options.physics.gravitationalConstant,
-          centralGravity: options.physics.centralGravity,
-          springLength: options.physics.springLength,
-          springConstant: options.physics.springConstant,
-          avoidOverlap: 1
-        },
-        barnesHut: {
-          gravitationalConstant: -2000,
-          centralGravity: 0.3,
-          springLength: 95,
-          springConstant: 0.04,
-          damping: 0.09
-        },
-        stabilization: {
-          enabled: true,
-          iterations: 1000
-        }
+        solver: 'barnesHut',
       },
       nodes: {
         shape: 'box',
@@ -124,6 +126,10 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({ creatures, opti
       edges: {
         width: 2,
         shadow: true,
+        color: {
+          color: '#666666',
+          highlight: '#666666',
+        },
         smooth: {
           enabled: true,
           type: 'cubicBezier',
