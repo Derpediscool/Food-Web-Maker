@@ -132,9 +132,9 @@ export default function FoodWebApp() {
   };
 
   const updateGraphOption = (
-    category: 'physics' | 'layout',  // restrict to valid categories
+    category: 'physics' | 'layout',
     option: string,
-    value: any
+    value: string | number
   ) => {
     setGraphOptions(prev => ({
       ...prev,
