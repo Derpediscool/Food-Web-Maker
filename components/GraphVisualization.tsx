@@ -2,130 +2,169 @@
 'use client';
 
 import React, { useEffect, useRef } from 'react';
-import { DataSet, Network } from 'vis-network/standalone/esm/vis-network';
+import { Network } from 'vis-network';
+import { DataSet } from 'vis-data';
 import { Creature } from '@/types/Creature';
 
 interface GraphVisualizationProps {
   creatures: Creature[];
+  options: {
+    mode: string;
+    physics: {
+      springLength: number;
+      springConstant: number;
+      centralGravity: number;
+      gravitationalConstant: number;
+    };
+    layout: {
+      hierarchicalDirection: string;
+      hierarchicalSortMethod: string;
+    };
+  };
 }
 
-const GraphVisualization: React.FC<GraphVisualizationProps> = ({ creatures }) => {
+const GraphVisualization: React.FC<GraphVisualizationProps> = ({ creatures, options }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const networkRef = useRef<Network | null>(null);
 
   useEffect(() => {
+    if (!containerRef.current) return;
+
+    // Create nodes and edges from creatures
+    const nodes = new DataSet(
+      creatures.map((creature) => ({
+        id: creature.name,
+        label: creature.name,
+        shape: 'box',
+        color: {
+          background: creature.color || '#666666',
+          border: creature.color || '#666666',
+          highlight: {
+            background: creature.color || '#666666',
+            border: creature.color || '#666666',
+          }
+        },
+        font: {
+          color: '#ffffff',
+          size: 16,
+          face: 'arial',
+          strokeWidth: 2,
+          strokeColor: '#000000',
+        },
+        padding: 10,
+        shapeProperties: {
+          borderRadius: 8
+        }
+      }))
+    );
+
+    const edges = new DataSet(
+      creatures.flatMap((creature, creatureIndex) =>
+        creature.eats.map((prey, preyIndex) => ({
+          id: `${creatureIndex}-${preyIndex}`,
+          from: creature.name,
+          to: prey,
+          arrows: 'to',
+          color: '#666666',
+          width: 2,
+        }))
+      )
+    );
+
+    const data = { nodes, edges };
+
+    const networkOptions = {
+      layout: {
+        randomSeed: 2,
+        improvedLayout: true,
+        hierarchical: {
+          enabled: options.mode === 'hierarchical',
+          direction: options.layout.hierarchicalDirection,
+          sortMethod: options.layout.hierarchicalSortMethod,
+          nodeSpacing: 150,
+          levelSeparation: 150
+        }
+      },
+      physics: {
+        enabled: true,
+        solver: options.mode === 'circular' ? 'forceAtlas2Based' : 'barnesHut',
+        forceAtlas2Based: {
+          gravitationalConstant: options.physics.gravitationalConstant,
+          centralGravity: options.physics.centralGravity,
+          springLength: options.physics.springLength,
+          springConstant: options.physics.springConstant,
+          avoidOverlap: 1
+        },
+        barnesHut: {
+          gravitationalConstant: -2000,
+          centralGravity: 0.3,
+          springLength: 95,
+          springConstant: 0.04,
+          damping: 0.09
+        },
+        stabilization: {
+          enabled: true,
+          iterations: 1000
+        }
+      },
+      nodes: {
+        shape: 'box',
+        margin: {
+          top: 10,
+          right: 10,
+          bottom: 10,
+          left: 10
+        },
+        borderWidth: 2,
+        shadow: true,
+        shapeProperties: {
+          borderRadius: 8
+        }
+      },
+      edges: {
+        width: 2,
+        shadow: true,
+        smooth: {
+          enabled: true,
+          type: 'cubicBezier',
+          forceDirection: options.mode === 'hierarchical' ? 'vertical' : 'none',
+          roundness: 0.5
+        }
+      },
+      interaction: {
+        hover: true,
+        navigationButtons: true,
+        keyboard: true,
+      }
+    };
+
+    // Cleanup previous network instance
+    if (networkRef.current) {
+      networkRef.current.destroy();
+    }
+
+    // Create new network
+    networkRef.current = new Network(containerRef.current, data, networkOptions);
+
     // Add event listener for graph stabilization
     const handleStabilize = () => {
       if (networkRef.current) {
         networkRef.current.stabilize();
       }
     };
-
     window.addEventListener('stabilizeGraph', handleStabilize);
 
-    if (containerRef.current) {
-      // Create nodes and edges sets.
-      const nodes = new DataSet<{ id: string; label: string; shape: string; color: string; font: { color: string } }>([]);
-      const edges = new DataSet<{ from: string; to: string; arrows: string; id?: string }>([]);
-
-      // For each creature, add a node and add edges for each food item.
-      creatures.forEach((creature) => {
-        // Add the creature node if it doesn't exist.
-        if (!nodes.get(creature.name)) {
-          // Autodetect text color based on the background color
-          const textColor = creature.color === '#f0f0f0' ? '#000000' : '#ffffff';
-          nodes.add({ 
-            id: creature.name, 
-            label: creature.name, 
-            shape: 'box', 
-            color: creature.color,
-            font: { color: textColor }
-          });
-        }
-        // Add edges for each food item
-        creature.eats.forEach((food) => {
-          // Add food node if it doesn't exist
-          if (!nodes.get(food)) {
-            nodes.add({ 
-              id: food, 
-              label: food, 
-              shape: 'box', 
-              color: '#f0f0f0',
-              font: { color: '#000000' }
-            });
-          }
-          // Add edge from food to creature
-          edges.add({ 
-            from: food, 
-            to: creature.name, 
-            arrows: 'to' 
-          });
-        });
-      });
-
-      const data = {
-        nodes,
-        edges,
-      };
-
-      const options = {
-        layout: {
-          hierarchical: {
-            enabled: true,
-            direction: 'UD', // Up to Down layout
-            sortMethod: 'directed', // Sort nodes based on directed edges
-            nodeSpacing: 150, // Increase spacing between nodes
-            levelSeparation: 150, // Increase vertical spacing between levels
-          }
-        },
-        physics: {
-          enabled: true,
-          hierarchicalRepulsion: {
-            nodeDistance: 200, // Increase distance between nodes
-            centralGravity: 0.5,
-            springLength: 200,
-            springConstant: 0.05,
-            damping: 0.09
-          },
-          stabilization: {
-            enabled: true,
-            iterations: 2000, // Increase iterations for better stability
-            updateInterval: 50,
-          },
-        },
-        edges: {
-          smooth: {
-            enabled: true,
-            type: 'cubicBezier',
-            forceDirection: 'vertical',
-            roundness: 0.5
-          }
-        },
-        nodes: {
-          shape: 'box',
-          margin: { top: 10, right: 10, bottom: 10, left: 10 }, // Add margin around node text
-          color: {
-            border: '#2B7CE9',
-            background: '#D2E5FF',
-          },
-        },
-      };
-
-      // Create a new network or update the existing one.
-      if (networkRef.current) {
-        networkRef.current.setData(data);
-      } else {
-        networkRef.current = new Network(containerRef.current, data, options);
-      }
-    }
-
-    // Cleanup event listener
+    // Cleanup
     return () => {
       window.removeEventListener('stabilizeGraph', handleStabilize);
+      if (networkRef.current) {
+        networkRef.current.destroy();
+        networkRef.current = null;
+      }
     };
-  }, [creatures]);
+  }, [creatures, options]);
 
-  return <div ref={containerRef} style={{ height: '500px', border: '1px solid #ddd' }} />;
+  return <div ref={containerRef} style={{ height: '600px', width: '100%' }} />;
 };
 
 export default GraphVisualization;

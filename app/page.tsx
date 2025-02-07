@@ -13,7 +13,20 @@ import {
   AlertDescription,
   AlertTitle,
 } from "@/components/ui/alert"
- 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Slider } from "@/components/ui/slider"
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 
 export default function FoodWebApp() {
   const [creatureName, setCreatureName] = useState('');
@@ -23,6 +36,19 @@ export default function FoodWebApp() {
   const [editing, setEditing] = useState<number | null>(null);
   const [duplicateError, setDuplicateError] = useState(false);
   const [importError, setImportError] = useState(false);
+  const [graphOptions, setGraphOptions] = useState({
+    mode: 'default',
+    physics: {
+      springLength: 100,
+      springConstant: 0.08,
+      centralGravity: 0.01,
+      gravitationalConstant: -50,
+    },
+    layout: {
+      hierarchicalDirection: 'UD',
+      hierarchicalSortMethod: 'directed',
+    }
+  });
 
   const addCreature = () => {
     if (!creatureName.trim() || creatures.some(creature => creature.name === creatureName.trim())) {
@@ -103,6 +129,20 @@ export default function FoodWebApp() {
       }
     };
     reader.readAsText(file);
+  };
+
+  const updateGraphOption = (
+    category: 'physics' | 'layout',  // restrict to valid categories
+    option: string,
+    value: any
+  ) => {
+    setGraphOptions(prev => ({
+      ...prev,
+      [category]: {
+        ...prev[category],
+        [option]: value
+      }
+    }));
   };
 
   return (
@@ -238,7 +278,117 @@ export default function FoodWebApp() {
           <CardTitle>Food Web Graph</CardTitle>
         </CardHeader>
         <CardContent>
-          <GraphVisualization creatures={creatures} />
+          <Accordion type="single" collapsible className="mb-4">
+            <AccordionItem value="graph-options">
+              <AccordionTrigger>Graph Options</AccordionTrigger>
+              <AccordionContent>
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="graph-mode">Layout Mode</Label>
+                    <Select 
+                      value={graphOptions.mode} 
+                      onValueChange={(value) => setGraphOptions(prev => ({ ...prev, mode: value }))}
+                    >
+                      <SelectTrigger id="graph-mode">
+                        <SelectValue placeholder="Select graph mode" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="default">Default</SelectItem>
+                        <SelectItem value="hierarchical">Hierarchical</SelectItem>
+                        <SelectItem value="circular">Circular</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {graphOptions.mode === 'hierarchical' && (
+                    <div className="space-y-4">
+                      <div>
+                        <Label htmlFor="hierarchical-direction">Direction</Label>
+                        <Select 
+                          value={graphOptions.layout.hierarchicalDirection} 
+                          onValueChange={(value) => updateGraphOption('layout', 'hierarchicalDirection', value)}
+                        >
+                          <SelectTrigger id="hierarchical-direction">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="UD">Top to Bottom</SelectItem>
+                            <SelectItem value="DU">Bottom to Top</SelectItem>
+                            <SelectItem value="LR">Left to Right</SelectItem>
+                            <SelectItem value="RL">Right to Left</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="sort-method">Sort Method</Label>
+                        <Select 
+                          value={graphOptions.layout.hierarchicalSortMethod} 
+                          onValueChange={(value) => updateGraphOption('layout', 'hierarchicalSortMethod', value)}
+                        >
+                          <SelectTrigger id="sort-method">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="directed">Directed</SelectItem>
+                            <SelectItem value="hubsize">Hub Size</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  )}
+
+                  {graphOptions.mode === 'circular' && (
+                    <div className="space-y-4">
+                      <div>
+                        <Label>Spring Length</Label>
+                        <Slider
+                          value={[graphOptions.physics.springLength]}
+                          onValueChange={([value]) => updateGraphOption('physics', 'springLength', value)}
+                          min={50}
+                          max={200}
+                          step={10}
+                        />
+                      </div>
+                      <div>
+                        <Label>Spring Constant</Label>
+                        <Slider
+                          value={[graphOptions.physics.springConstant]}
+                          onValueChange={([value]) => updateGraphOption('physics', 'springConstant', value)}
+                          min={0.01}
+                          max={0.5}
+                          step={0.01}
+                        />
+                      </div>
+                      <div>
+                        <Label>Central Gravity</Label>
+                        <Slider
+                          value={[graphOptions.physics.centralGravity]}
+                          onValueChange={([value]) => updateGraphOption('physics', 'centralGravity', value)}
+                          min={0.01}
+                          max={1}
+                          step={0.01}
+                        />
+                      </div>
+                      <div>
+                        <Label>Gravitational Constant</Label>
+                        <Slider
+                          value={[Math.abs(graphOptions.physics.gravitationalConstant)]}
+                          onValueChange={([value]) => updateGraphOption('physics', 'gravitationalConstant', -value)}
+                          min={10}
+                          max={100}
+                          step={5}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+
+          <GraphVisualization creatures={creatures} options={graphOptions} />
+          
           <div className="mt-4">
             <Button variant="outline" onClick={() => window.dispatchEvent(new CustomEvent('stabilizeGraph'))}>
               Reorganize Graph
