@@ -95,14 +95,15 @@ const GraphVisualization: React.FC<GraphVisualizationProps> = ({ creatures }) =>
         },
         edges: {
           smooth: {
-            type: 'cubicBezier', // Smoother edge curves
-            forceDirection: 'vertical', // Force edges to flow vertically
+            enabled: true,
+            type: 'cubicBezier',
+            forceDirection: 'vertical',
             roundness: 0.5
           }
         },
         nodes: {
           shape: 'box',
-          margin: 10, // Add margin around node text
+          margin: { top: 10, right: 10, bottom: 10, left: 10 }, // Add margin around node text
           color: {
             border: '#2B7CE9',
             background: '#D2E5FF',
