@@ -98,7 +98,7 @@ export default function FoodWebApp() {
         } else {
           setImportError(true);
         }
-      } catch (error) {
+      } catch (_) {
         setImportError(true);
       }
     };
